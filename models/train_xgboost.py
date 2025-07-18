@@ -4,7 +4,6 @@ from sklearn.metrics import precision_score
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 import sys
-import numpy as np
 
 # Load data
 df = pd.read_csv("data/processed_grants.csv")
