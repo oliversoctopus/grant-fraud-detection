@@ -16,13 +16,12 @@ if len(df) == 0:
 le = LabelEncoder()
 X = pd.DataFrame({
     "Award Amount": df["Award Amount"],
-    "Recipient Encoded": le.fit_transform(df["Recipient Name"]),
-    "CFDA Encoded": le.fit_transform(df["CFDA Title"])
+    "Recipient Encoded": le.fit_transform(df["Recipient Name"])
 })
 
-# Use anomaly scores from Isolation Forest
+# Use anomaly scores as pseudo-labels (from anomaly_detection.py)
 df_anomaly = pd.read_csv("data/grants_with_anomalies.csv")
-y = (df_anomaly["anomaly"] == -1).astype(int)  # Use anomalies as fraud labels
+y = (df_anomaly["anomaly"] == -1).astype(int)  # Anomalies as "fraud"
 
 # Split data
 try:
@@ -32,14 +31,8 @@ except ValueError as e:
     sys.exit(1)
 
 # Train model
-model = XGBClassifier(max_depth=6, n_estimators=100, base_score=0.5, objective="binary:logistic")
+model = XGBClassifier(max_depth=6, n_estimators=100)
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 print(f"Precision: {precision_score(y_test, y_pred):.2f}")
 model.save_model("models/xgboost_fraud.json")
-
-from sklearn.model_selection import cross_val_score
-scores = cross_val_score(model, X, y, cv=5, scoring='precision')
-print(f"Cross-Validation Precision: {scores.mean():.2f}")
-from sklearn.metrics import f1_score
-print(f"F1: {f1_score(y_test, y_pred):.2f}")
